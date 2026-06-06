@@ -13,50 +13,50 @@ const getDashboardStats = async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     
-    // Obtener secciones/mazos del usuario con la fecha de la última vez que se estudió
-    // Para simplificar, buscamos las secciones de las flashcards que el usuario posee
-    // y para cada una buscamos el último progress
-    
-    // Todas las flashcards del usuario
-    const userFlashcards = await Flashcard.findAll({
-      where: { userId: userId },
+    const { Op } = require('sequelize');
+
+    // Obtener las secciones/mazos filtrados
+    const allSections = await Section.findAll({
       include: [
-        { model: Section, as: 'section' }
-      ]
+        { model: Flashcard, as: 'flashcards', attributes: ['id'] },
+        { model: User, as: 'teacher', attributes: ['role'] }
+      ],
+      where: {
+        [Op.or]: [
+          { teacherId: userId }, // Creados por el propio estudiante
+          { teacherId: null }, // Públicos / Legacy
+          { '$teacher.role$': 'teacher' } // Creados por cualquier profesor
+        ]
+      }
     });
 
     const sectionsMap = new Map();
 
-    for (const card of userFlashcards) {
-      if (card.section) {
-        if (!sectionsMap.has(card.section.id)) {
-          sectionsMap.set(card.section.id, {
-            id: card.section.id,
-            name: card.section.name,
-            totalCards: 0,
-            lastStudied: null
-          });
-        }
-        
-        const sectionData = sectionsMap.get(card.section.id);
-        sectionData.totalCards += 1;
-        
-        // Buscar el último progreso de esta tarjeta
+    for (const section of allSections) {
+      sectionsMap.set(section.id, {
+        id: section.id,
+        name: section.name,
+        totalCards: section.flashcards.length,
+        lastStudied: null
+      });
+      
+      // Buscar el último progreso de este usuario para cualquier tarjeta de esta sección
+      if (section.flashcards && section.flashcards.length > 0) {
+        const cardIds = section.flashcards.map(c => c.id);
         const progress = await Progress.findOne({
-          where: { UserId: userId, FlashcardId: card.id },
+          where: { UserId: userId, FlashcardId: cardIds },
           order: [['updatedAt', 'DESC']]
         });
 
         if (progress) {
-          if (!sectionData.lastStudied || progress.updatedAt > sectionData.lastStudied) {
-            sectionData.lastStudied = progress.updatedAt;
-          }
+          sectionsMap.get(section.id).lastStudied = progress.updatedAt;
         }
       }
     }
 
     const recentDecks = Array.from(sectionsMap.values()).sort((a, b) => {
-      // Ordenar por fecha más reciente
+      // Ordenar por fecha más reciente, si no hay poner al final
+      if (!a.lastStudied && !b.lastStudied) return 0;
       if (!a.lastStudied) return 1;
       if (!b.lastStudied) return -1;
       return b.lastStudied - a.lastStudied;

@@ -4,14 +4,19 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "node ./node_modules/react-scripts/bin/react-scripts.js start",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
+    "@types/jest": "^30.0.0",
+    "@types/node": "^25.9.2",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
     "bcryptjs": "^3.0.3",
     "canvas-confetti": "^1.9.4",
     "compression": "^1.8.1",
@@ -20,14 +25,16 @@
     "express": "^5.2.1",
     "framer-motion": "^12.38.0",
     "jsonwebtoken": "^9.0.3",
+    "jspdf": "^4.2.1",
     "lucide-react": "^1.14.0",
     "openai": "^6.37.0",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.15.0",
-    "react-scripts": "^0.0.0",
+    "react-scripts": "^5.0.1",
     "sequelize": "^6.37.8",
-    "sqlite3": "^6.0.1"
+    "sqlite3": "^6.0.1",
+    "typescript": "^6.0.3"
   },
   "browserslist": {
     "production": [
@@ -41,5 +48,12 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3001"
+  "proxy": "http://localhost:3001",
+  "devDependencies": {
+    "@types/canvas-confetti": "^1.9.0",
+    "ajv": "^8.20.0",
+    "autoprefixer": "^10.5.0",
+    "postcss": "^8.5.15",
+    "tailwindcss": "^3.4.19"
+  }
 }
