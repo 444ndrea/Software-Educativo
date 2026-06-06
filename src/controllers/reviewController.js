@@ -1,21 +1,30 @@
-const { Flashcard, User, Progress, Section } = require('../models');
+const { Flashcard, User, Progress, Section, sequelize } = require('../models');
 const { Op } = require('sequelize');
+
 
 const getDueReviews = async (req, res) => {
   try {
     const now = new Date();
     const { sectionId } = req.query;
-    
-    // Obtener las flashcards pendientes para hoy o días anteriores
+
+    // Condición de fecha: nunca estudiadas (NULL) o con vencimiento pasado
     const whereClause = {
-      next_review: {
-        [Op.lte]: now
-      }
+      [Op.or]: [
+        { next_review: null },
+        { next_review: { [Op.lte]: now } }
+      ]
     };
-    
-    // Si la autenticación inyecta req.user, filtramos por el usuario actual
+
+    // Si hay usuario autenticado, mostrar:
+    // - sus propias tarjetas (userId = student.id)
+    // - tarjetas públicas del profesor (userId IS NULL)
     if (req.user && req.user.id) {
-      whereClause.userId = req.user.id;
+      whereClause[Op.and] = {
+        [Op.or]: [
+          { userId: req.user.id },
+          { userId: null }
+        ]
+      };
     }
 
     // Filtrar por mazo específico si se solicita
@@ -25,7 +34,11 @@ const getDueReviews = async (req, res) => {
 
     const dueCards = await Flashcard.findAll({
       where: whereClause,
-      order: [['next_review', 'ASC']]
+      order: [
+        // Tarjetas nuevas (null) primero, luego por fecha ascendente
+        [sequelize.literal('CASE WHEN next_review IS NULL THEN 0 ELSE 1 END'), 'ASC'],
+        ['next_review', 'ASC']
+      ]
     });
 
     res.status(200).json(dueCards);
@@ -34,6 +47,7 @@ const getDueReviews = async (req, res) => {
     res.status(500).json({ error: 'Error interno del servidor al obtener las flashcards' });
   }
 };
+
 
 const submitReview = async (req, res) => {
   try {

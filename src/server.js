@@ -231,10 +231,15 @@ app.post('/api/mazos', async (req, res) => {
   try {
     const section = await Section.create({ name }, { transaction: t });
     if (cards && cards.length > 0) {
+      const now = new Date();
       const flashcardsToInsert = cards.map(c => ({
         side_a: c.pregunta,
         side_b: c.respuesta,
-        sectionId: section.id
+        sectionId: section.id,
+        next_review: now,   // Disponibles de inmediato para su primer repaso
+        repetitions: 0,
+        easiness_factor: 2.5,
+        interval: 1
       }));
       await Flashcard.bulkCreate(flashcardsToInsert, { transaction: t });
     }
