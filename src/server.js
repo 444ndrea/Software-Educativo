@@ -256,7 +256,7 @@ async function startServer() {
   try {
     // Sincronizar Modelos a SQLite Local
     // `alter: true` sincroniza la estructura de la tabla (agrega columnas faltantes)
-    await sequelize.sync({ alter: true });
+    await sequelize.sync();
     console.log('✅ Base de Datos SQLite sincronizada');
 
     app.listen(PORT, () => {
