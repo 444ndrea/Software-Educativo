@@ -57,7 +57,7 @@ const ModalReporte: React.FC<ModalReporteProps> = ({ isOpen, onClose, student, s
       setError('');
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`http://localhost:3001/api/reportes/estudiante/${student.id}/mazo/${selectedMazoId}`, {
+        const res = await fetch(`http://localhost:3001/api/teacher/report/student/${student.id}/deck/${selectedMazoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Error al obtener el reporte');

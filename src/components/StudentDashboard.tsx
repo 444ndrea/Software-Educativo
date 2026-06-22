@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   Loader2, PlusCircle, CheckCircle, LogOut, Flame, Book,
   PlayCircle, Target, Award, Zap, Trophy, Star, Layers,
-  LayoutDashboard
+  LayoutDashboard, HelpCircle
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { precisionColor } from '../utils/precisionColor';
@@ -16,11 +16,14 @@ interface Deck {
   totalCards: number;
   lastStudied?: string;
   pendingCards?: number;
+  studiedCards?: number;
   precision?: number;
 }
 
 interface DashboardData {
   currentStreak: number;
+  totalReviewed?: number;
+  completedToday?: number;
   recentDecks: Deck[];
 }
 
@@ -73,7 +76,7 @@ const StudentDashboard: React.FC = () => {
 
   // Computed stats
   const totalDecks = dashboardData.recentDecks.length;
-  const totalReviewed = dashboardData.recentDecks.reduce((acc, d) => acc + (d.totalCards || 0), 0);
+  const totalReviewed = dashboardData.totalReviewed ?? dashboardData.recentDecks.reduce((acc, d) => acc + (d.totalCards || 0), 0);
   const streak = dashboardData.currentStreak;
   const avgPrecision = dashboardData.recentDecks.length > 0
     ? Math.round(dashboardData.recentDecks.reduce((acc, d) => acc + (d.precision ?? 75), 0) / dashboardData.recentDecks.length)
@@ -82,7 +85,7 @@ const StudentDashboard: React.FC = () => {
   const pendingDecks = dashboardData.recentDecks.filter(d => (d.pendingCards ?? d.totalCards) > 0);
   const totalPending = pendingDecks.reduce((acc, d) => acc + (d.pendingCards ?? d.totalCards), 0);
   const dailyGoal = Math.max(totalPending, 20);
-  const completedToday = Math.max(0, dailyGoal - totalPending);
+  const completedToday = dashboardData.completedToday ?? Math.max(0, dailyGoal - totalPending);
   const dailyProgress = Math.round((completedToday / dailyGoal) * 100);
 
   const activeWeek = getActiveWeekDays(streak);
@@ -185,9 +188,12 @@ const StudentDashboard: React.FC = () => {
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
 
           {/* Brand */}
-          <div className="flex items-center gap-2">
-            <img src="/logo-sinfondo.png" alt="MemorIA" className="h-8 w-auto" />
-            <span className="text-xl font-bold text-blue-800 tracking-tight">MemorIA</span>
+          <div className="flex items-center z-10">
+            <img
+              src="/logo-sinfondo.png"
+              alt="MemorIA Logo"
+              className="h-16 w-auto object-contain"
+            />
           </div>
 
           {/* Right side */}
@@ -208,6 +214,15 @@ const StudentDashboard: React.FC = () => {
                 {getInitials(studentName)}
               </div>
             </div>
+
+            {/* Support */}
+            <button
+              onClick={() => navigate('/support')}
+              className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-blue-50"
+              title="Soporte y Ayuda"
+            >
+              <HelpCircle className="w-5 h-5" />
+            </button>
 
             {/* Logout */}
             <button
@@ -371,9 +386,12 @@ const StudentDashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {displayedDecks.length > 0 ? (
               displayedDecks.map((deck) => {
-                const pending = deck.pendingCards ?? deck.totalCards;
-                const precision = deck.precision ?? 0;
-                const progress = deck.totalCards > 0 ? Math.round(((deck.totalCards - pending) / deck.totalCards) * 100) : 0;
+                console.log("MAZO RECIBIDO EN FRONTEND:", deck);
+                const totalCards = Number(deck.totalCards) || 0;
+                const studiedCards = Number(deck.studiedCards) || 0;
+                const pending = deck.pendingCards ?? totalCards;
+                const precision = deck.precision !== undefined && deck.precision !== null ? deck.precision : 0;
+                const progress = totalCards > 0 ? Math.round((studiedCards / totalCards) * 100) : 0;
                 const isComplete = progress === 100;
 
                 return (

@@ -18,36 +18,47 @@ const StudySession: React.FC = () => {
   const [isFlipped, setIsFlipped] = useState(false);
   const [loading, setLoading] = useState(true);
   const [direction, setDirection] = useState(1);
+  const [sessionStats, setSessionStats] = useState({ easy: 0, good: 0, hard: 0, total: 0 });
   
   // Timer states
   const [startTime, setStartTime] = useState(Date.now());
   const [elapsed, setElapsed] = useState(0);
   const [freezeTime, setFreezeTime] = useState(false);
 
-  useEffect(() => {
-    const fetchCards = async () => {
-      try {
-        const token = localStorage.getItem('token') || '';
-        const url = sectionId && sectionId !== 'all' 
-          ? `http://localhost:3001/api/reviews/due?sectionId=${sectionId}`
-          : `http://localhost:3001/api/reviews/due`;
-
-        const res = await fetch(url, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-        if (res.ok) {
-          const data = await res.json();
-          setCards(data);
-          setStartTime(Date.now());
-        }
-      } catch (error) {
-        console.error('Error al cargar tarjetas:', error);
-      } finally {
-        setLoading(false);
+  const fetchCards = async (reviewAll = false) => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token') || '';
+      let url = sectionId && sectionId !== 'all' 
+        ? `http://localhost:3001/api/reviews/due?sectionId=${sectionId}`
+        : `http://localhost:3001/api/reviews/due`;
+      
+      if (reviewAll) {
+        url += url.includes('?') ? '&mode=review_all' : '?mode=review_all';
       }
-    };
+
+      const res = await fetch(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCards(data);
+        setCurrentIndex(0);
+        setSessionStats({ easy: 0, good: 0, hard: 0, total: 0 });
+        setStartTime(Date.now());
+        setElapsed(0);
+        setFreezeTime(false);
+      }
+    } catch (error) {
+      console.error('Error al cargar tarjetas:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchCards();
   }, [sectionId]);
 
@@ -101,6 +112,14 @@ const StudySession: React.FC = () => {
   };
 
   const handleRate = async (quality: number) => {
+    setSessionStats(prev => {
+      let newStats = { ...prev, total: prev.total + 1 };
+      if (quality >= 4) newStats.easy += 1;
+      else if (quality === 3) newStats.good += 1;
+      else newStats.hard += 1;
+      return newStats;
+    });
+
     try {
       const token = localStorage.getItem('token') || '';
       await fetch(`http://localhost:3001/api/reviews/${cards[currentIndex].id}`, {
@@ -109,7 +128,7 @@ const StudySession: React.FC = () => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ quality, tiempo_empleado: elapsed })
+        body: JSON.stringify({ quality, time_spent: elapsed })
       });
       
       setIsFlipped(false);
@@ -135,31 +154,113 @@ const StudySession: React.FC = () => {
     );
   }
 
-  // Session Completed state
-  if (cards.length === 0 || currentIndex >= cards.length) {
+  // Estado: Al día (no hay tarjetas cargadas para repasar)
+  if (cards.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F5F7] p-6 font-sans">
         <motion.div 
           initial={{ scale: 0.9, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="bg-white p-10 rounded-[2rem] shadow-xl flex flex-col items-center max-w-md w-full border border-gray-100 relative overflow-hidden"
+          className="bg-white p-10 rounded-[2rem] shadow-xl flex flex-col items-center max-w-lg w-full border border-gray-100 text-center"
+        >
+          <div className="bg-blue-50 p-5 rounded-full mb-6 text-[#1E3A8A]">
+            <CheckCircle className="w-16 h-16" />
+          </div>
+          <h2 className="text-3xl font-extrabold text-gray-900 mb-2">¡Estás al día con este mazo!</h2>
+          <p className="text-gray-500 font-medium mb-8">Regresa mañana para tu próximo repaso. Mantén tu racha activa.</p>
+          <div className="flex flex-col gap-3 w-full">
+            <button
+              onClick={() => fetchCards(true)}
+              className="w-full bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 font-bold py-4 px-6 rounded-2xl shadow-sm transition-transform transform active:scale-[0.98]"
+            >
+              Volver a Repasar
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="w-full bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-transform transform active:scale-[0.98]"
+            >
+              Volver a mis mazos
+            </button>
+          </div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // Session Completed state (Golden Cup)
+  if (currentIndex >= cards.length) {
+    const acierto = sessionStats.total > 0 ? Math.round(((sessionStats.easy + sessionStats.good) / sessionStats.total) * 100) : 0;
+    
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-[#F5F5F7] p-6 font-sans">
+        <motion.div 
+          initial={{ scale: 0.9, opacity: 0, y: 20 }}
+          animate={{ scale: 1, opacity: 1, y: 0 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="bg-white p-10 rounded-[2rem] shadow-xl flex flex-col items-center max-w-lg w-full border border-gray-100 relative overflow-hidden"
         >
           {/* Fondo sutil decorativo */}
-          <div className="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 translate-x-1/2 -translate-y-1/2"></div>
+          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-50 rounded-full mix-blend-multiply filter blur-3xl opacity-60 translate-x-1/2 -translate-y-1/2"></div>
 
-          <div className="bg-green-100 p-5 rounded-[1.5rem] mb-6 inline-flex relative z-10">
-            <CheckCircle className="w-16 h-16 text-green-500" />
+          <div className="bg-yellow-100 p-5 rounded-[1.5rem] mb-6 inline-flex relative z-10">
+            <span className="text-6xl" role="img" aria-label="Copa Dorada">🏆</span>
           </div>
-          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-3">Sesión Completada</h2>
-          <p className="text-gray-500 text-center mb-8 font-medium">¡Gran trabajo! Has repasado todo tu contenido pendiente para hoy.</p>
+          <h2 className="text-3xl font-extrabold text-gray-900 text-center mb-2">¡Sesión Completada!</h2>
+          <p className="text-gray-500 text-center mb-8 font-medium">Has finalizado tu repaso. Aquí están tus resultados:</p>
           
-          <button
-            onClick={() => navigate('/')}
-            className="w-full bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-transform transform active:scale-[0.98]"
-          >
-            Volver al Panel
-          </button>
+          {/* Porcentaje Circular */}
+          <div className="relative w-32 h-32 mb-8 flex items-center justify-center">
+            <svg className="w-full h-full transform -rotate-90">
+              <circle cx="64" cy="64" r="56" className="stroke-current text-gray-100" strokeWidth="12" fill="none" />
+              <circle 
+                cx="64" cy="64" r="56" 
+                className="stroke-current text-[#1E3A8A]" 
+                strokeWidth="12" 
+                fill="none" 
+                strokeDasharray="351.858" 
+                strokeDashoffset={351.858 - (351.858 * acierto) / 100}
+                strokeLinecap="round"
+              />
+            </svg>
+            <div className="absolute inset-0 flex flex-col items-center justify-center">
+              <span className="text-3xl font-black text-gray-900">{acierto}%</span>
+              <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">Acierto</span>
+            </div>
+          </div>
+
+          {/* Breakdown cards */}
+          <div className="grid grid-cols-3 gap-4 w-full mb-8">
+            <div className="bg-green-50 rounded-2xl p-4 text-center border border-green-100">
+              <p className="text-sm font-bold text-green-700 mb-1">Fácil</p>
+              <p className="text-2xl font-black text-green-600">{sessionStats.easy}</p>
+            </div>
+            <div className="bg-blue-50 rounded-2xl p-4 text-center border border-blue-100">
+              <p className="text-sm font-bold text-blue-700 mb-1">Bien</p>
+              <p className="text-2xl font-black text-blue-600">{sessionStats.good}</p>
+            </div>
+            <div className="bg-red-50 rounded-2xl p-4 text-center border border-red-100">
+              <p className="text-sm font-bold text-red-700 mb-1">Difícil</p>
+              <p className="text-2xl font-black text-red-600">{sessionStats.hard}</p>
+            </div>
+          </div>
+          
+          <div className="flex gap-4 w-full">
+            <button
+              onClick={() => {
+                fetchCards(true);
+              }}
+              className="flex-1 bg-white border-2 border-[#1E3A8A] text-[#1E3A8A] hover:bg-blue-50 font-bold py-4 px-4 rounded-2xl transition-colors active:scale-95"
+            >
+              Repasar de nuevo
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              className="flex-1 bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-transform transform active:scale-95"
+            >
+              Volver a mis mazos
+            </button>
+          </div>
         </motion.div>
       </div>
     );

@@ -27,7 +27,7 @@ const Progress = sequelize.define('Progress', {
     allowNull: false,
     defaultValue: DataTypes.NOW,
   },
-  tiempo_empleado: {
+  time_spent: {
     type: DataTypes.INTEGER,
     defaultValue: 0,
     allowNull: false,
@@ -35,14 +35,23 @@ const Progress = sequelize.define('Progress', {
   last_synced_at: {
     type: DataTypes.DATE,
     allowNull: true,
+  },
+  UserId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    unique: false, // Explícitamente indicamos que NO es único individualmente
+  },
+  FlashcardId: {
+    type: DataTypes.UUID,
+    allowNull: false,
+    unique: false, // Explícitamente indicamos que NO es único individualmente
   }
-  // userId y flashcardId serán añadidos mediante las asociaciones
 }, {
   timestamps: true,
   indexes: [
     {
       unique: true,
-      fields: ['UserId', 'FlashcardId'] // Un progreso único por estudiante y tarjeta
+      fields: ['UserId', 'FlashcardId'] // La única combinación única permitida
     }
   ]
 });

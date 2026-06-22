@@ -5,6 +5,7 @@ import StudySession from './components/StudySession';
 import Auth from './components/Auth';
 import StudentDashboard from './components/StudentDashboard';
 import TeacherDashboard from './components/TeacherDashboard';
+import SupportCenter from './components/SupportCenter';
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/student" element={<StudentDashboard />} />
         <Route path="/teacher" element={<TeacherDashboard />} />
         <Route path="/study/:sectionId" element={<StudySession />} />
+        <Route path="/support" element={<SupportCenter />} />
       </Routes>
     </Router>
   );

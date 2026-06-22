@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, Users, Layers, BookOpen, PlusCircle, Settings, Loader2, CheckCircle, BarChart3, Download } from 'lucide-react';
+import { LogOut, Users, Layers, BookOpen, PlusCircle, Settings, Loader2, CheckCircle, BarChart3, Download, HelpCircle } from 'lucide-react';
 import ModalReporte from './ModalReporte';
 import { precisionColor } from '../utils/precisionColor';
 
@@ -45,34 +45,52 @@ const TeacherDashboard: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
 
-      const [statsRes, mazosRes] = await Promise.all([
-        fetch('http://localhost:3001/api/profesor/stats', { headers: { 'Authorization': `Bearer ${token}` } }),
-        fetch('http://localhost:3001/api/mazos', { headers: { 'Authorization': `Bearer ${token}` } })
-      ]);
+      const res = await fetch('http://localhost:3001/api/teacher/dashboard', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
 
-      if (statsRes.ok && mazosRes.ok) {
-        const statsData = await statsRes.json();
-        const mazosData = await mazosRes.json();
-
-        // Asignar un score ficticio basado en el email length para demo, si no viene de API
-        const studentsWithScores = (statsData.students || []).map((s: any) => ({
-          ...s,
-          score: s.score !== undefined ? s.score : Math.floor(Math.random() * (100 - 40 + 1) + 40)
-        }));
+      if (res.ok) {
+        const data = await res.json();
 
         setDashboardData({
-          studentsCount: statsData.studentsCount,
-          students: studentsWithScores,
-          flashcardsCount: statsData.flashcardsCount,
-          sections: mazosData
+          studentsCount: data.studentsCount,
+          students: data.students,
+          flashcardsCount: data.flashcardsCount,
+          sections: data.sections
         });
       } else {
-        console.error('Failed to fetch stats or mazos');
+        console.error('Failed to fetch dashboard data');
       }
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDownload = async (student: Student) => {
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`http://localhost:3001/api/teacher/export/student/${student.id}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        // The server provides a filename via Content-Disposition but setting it here is safe too
+        a.download = `Reporte_${student.name.replace(/\s+/g, '_')}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+      } else {
+        alert('Error al exportar los datos');
+      }
+    } catch (error) {
+      console.error('Download failed', error);
+      alert('Error de red al intentar descargar');
     }
   };
 
@@ -148,8 +166,12 @@ const TeacherDashboard: React.FC = () => {
       {/* Navbar / Header */}
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-start md:items-center mb-10 gap-4">
         <div className="flex items-center gap-4">
-          <div className="bg-white p-2 rounded-2xl shadow-sm border border-gray-100">
-            <img src="/logo-sinfondo.png" alt="MemorIA Logo" className="w-16 h-16 object-contain mr-3" />
+          <div className="flex items-center z-10">
+            <img
+              src="/logo-sinfondo.png"
+              alt="MemorIA Logo"
+              className="h-16 w-auto object-contain"
+            />
           </div>
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-gray-900">
@@ -160,6 +182,13 @@ const TeacherDashboard: React.FC = () => {
         </div>
 
         <div className="flex gap-4">
+          <button
+            onClick={() => navigate('/support')}
+            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-semibold transition-colors bg-white px-5 py-2.5 rounded-xl shadow-sm border border-gray-200"
+          >
+            <HelpCircle className="w-4 h-4" />
+            <span className="text-sm">Soporte y Ayuda</span>
+          </button>
           <button
             onClick={() => alert('Abriendo panel de configuración...')}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold transition-colors bg-white px-5 py-2.5 rounded-xl shadow-sm border border-gray-200"
@@ -204,7 +233,8 @@ const TeacherDashboard: React.FC = () => {
                 </div>
                 <div>
                   <p className="text-gray-500 text-sm font-semibold mb-1">Mazos Oficiales</p>
-                  <p className="text-3xl font-bold">{dashboardData.sections.length}</p>
+                  {/* Now using officialSectionsCount if we passed it or just count from sections */}
+                  <p className="text-3xl font-bold">{(dashboardData as any).officialSectionsCount || dashboardData.sections.length}</p>
                 </div>
               </div>
 
@@ -409,6 +439,7 @@ const TeacherDashboard: React.FC = () => {
                                 <BarChart3 className="w-4 h-4" />
                               </button>
                               <button
+                                onClick={() => handleDownload(student)}
                                 className="text-red-500 bg-red-50 hover:bg-red-100 p-2 rounded-lg transition-colors"
                                 title="Descargar Ficha"
                               >

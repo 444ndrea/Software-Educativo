@@ -5,15 +5,18 @@ const { Op } = require('sequelize');
 const getDueReviews = async (req, res) => {
   try {
     const now = new Date();
-    const { sectionId } = req.query;
+    const { sectionId, mode } = req.query;
 
-    // Condición de fecha: nunca estudiadas (NULL) o con vencimiento pasado
-    const whereClause = {
-      [Op.or]: [
+    const whereClause = {};
+
+    if (mode !== 'review_all') {
+      whereClause[Op.or] = [
+        { next_review: { [Op.lte]: now } },
         { next_review: null },
-        { next_review: { [Op.lte]: now } }
-      ]
-    };
+        { next_review: 'Invalid Date' },
+        { next_review: '' }
+      ];
+    }
 
     // Si hay usuario autenticado, mostrar:
     // - sus propias tarjetas (userId = student.id)
@@ -52,7 +55,7 @@ const getDueReviews = async (req, res) => {
 const submitReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { quality, tiempo_empleado = 0 } = req.body;
+    const { quality, time_spent = 0 } = req.body;
 
     if (quality === undefined || quality < 0 || quality > 5) {
       return res.status(400).json({ error: 'La calidad (quality) debe ser un número entre 0 y 5' });
@@ -68,8 +71,15 @@ const submitReview = async (req, res) => {
       return res.status(403).json({ error: 'No tienes permiso para repasar esta flashcard' });
     }
 
-    // Lógica del Algoritmo SM-2
+    // Lógica del Algoritmo SM-2 y validación robusta
     let { repetitions, easiness_factor, interval } = card;
+    
+    repetitions = parseInt(repetitions, 10) || 0;
+    interval = parseInt(interval, 10) || 0;
+    easiness_factor = parseFloat(easiness_factor);
+    if (isNaN(easiness_factor) || easiness_factor < 1.3) {
+      easiness_factor = 2.5;
+    }
 
     if (quality >= 3) {
       if (repetitions === 0) {
@@ -111,7 +121,7 @@ const submitReview = async (req, res) => {
         interval,
         repetitions,
         next_review_date: next_review,
-        tiempo_empleado: tiempo_empleado
+        time_spent: time_spent
       });
 
       // Lógica de Racha (Streak)
