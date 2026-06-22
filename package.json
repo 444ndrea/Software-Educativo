@@ -51,10 +51,13 @@
   },
   "proxy": "http://localhost:3001",
   "devDependencies": {
-    "@types/canvas-confetti": "^1.9.0",
-    "ajv": "^8.20.0",
-    "autoprefixer": "^10.5.0",
-    "postcss": "^8.5.15",
-    "tailwindcss": "^3.4.19"
-  }
+      "@types/canvas-confetti": "^1.9.0",
+      "ajv": "^8.20.0",
+      "autoprefixer": "^10.5.0",
+      "postcss": "^8.5.15",
+      "tailwindcss": "^3.4.19"
+    },
+    "engines": {
+      "node": "20.x"
+    }
 }
