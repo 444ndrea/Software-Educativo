@@ -30,8 +30,8 @@ const StudySession: React.FC = () => {
       setLoading(true);
       const token = localStorage.getItem('token') || '';
       let url = sectionId && sectionId !== 'all' 
-        ? `http://localhost:3001/api/reviews/due?sectionId=${sectionId}`
-        : `http://localhost:3001/api/reviews/due`;
+        ? `${process.env.REACT_APP_API_URL}/api/reviews/due?sectionId=${sectionId}`
+        : `${process.env.REACT_APP_API_URL}/api/reviews/due`;
       
       if (reviewAll) {
         url += url.includes('?') ? '&mode=review_all' : '?mode=review_all';
@@ -122,7 +122,7 @@ const StudySession: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token') || '';
-      await fetch(`http://localhost:3001/api/reviews/${cards[currentIndex].id}`, {
+      await fetch(`${process.env.REACT_APP_API_URL}/api/reviews/${cards[currentIndex].id}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
