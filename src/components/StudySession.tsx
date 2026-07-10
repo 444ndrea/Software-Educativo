@@ -146,6 +146,28 @@ const StudySession: React.FC = () => {
     }
   };
 
+  const handleFinishSession = async () => {
+    const totalFaciles = sessionStats.easy;
+    try {
+      const token = localStorage.getItem('token');
+      if (sectionId && sectionId !== 'all' && token) {
+        console.log("Enviando al backend facilesCount:", totalFaciles);
+        await fetch(`${process.env.REACT_APP_API_URL || ''}/api/mazos/${sectionId}/progreso`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({ facilesCount: totalFaciles })
+        });
+      }
+    } catch (error) {
+      console.error('Error syncing final progress:', error);
+    } finally {
+      navigate('/');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-[#F5F5F7]">
@@ -177,7 +199,7 @@ const StudySession: React.FC = () => {
               Volver a Repasar
             </button>
             <button
-              onClick={() => navigate('/')}
+              onClick={handleFinishSession}
               className="w-full bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-6 rounded-2xl shadow-lg transition-transform transform active:scale-[0.98]"
             >
               Volver a mis mazos
@@ -255,7 +277,7 @@ const StudySession: React.FC = () => {
               Repasar de nuevo
             </button>
             <button
-              onClick={() => navigate('/')}
+              onClick={handleFinishSession}
               className="flex-1 bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-4 rounded-2xl shadow-lg transition-transform transform active:scale-95"
             >
               Volver a mis mazos
@@ -283,7 +305,7 @@ const StudySession: React.FC = () => {
       {/* Top Navbar */}
       <div className="w-full px-6 py-6 flex justify-between items-center max-w-6xl mx-auto">
         <button 
-          onClick={() => navigate('/')}
+          onClick={handleFinishSession}
           className="flex items-center gap-2 text-gray-500 hover:text-gray-900 font-semibold transition-colors bg-white hover:bg-gray-50 px-4 py-2.5 rounded-xl shadow-sm border border-gray-200 active:scale-[0.98]"
         >
           <ArrowLeft className="w-4 h-4" />

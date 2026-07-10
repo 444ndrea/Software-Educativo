@@ -137,36 +137,31 @@ const ModalReporte: React.FC<ModalReporteProps> = ({ isOpen, onClose, student, s
             <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               
               {/* Progreso y Rendimiento */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm">
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                    <CheckCircle className="w-4 h-4 text-green-500" />
-                    Progreso
-                  </h3>
-                  <div className="flex items-end gap-2 mb-3">
-                    <span className="text-4xl font-black text-gray-900">{reportData.progreso.consolidadas}</span>
-                    <span className="text-gray-400 font-semibold mb-1">/ {reportData.progreso.totales} completadas</span>
-                  </div>
-                  <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
-                    <div 
-                      className="bg-green-500 h-full rounded-full transition-all duration-1000 ease-out" 
-                      style={{ width: `${reportData.progreso.totales > 0 ? (reportData.progreso.consolidadas / reportData.progreso.totales) * 100 : 0}%` }}
-                    ></div>
-                  </div>
+              {/* Progreso y Rendimiento */}
+              <div className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm mb-6">
+                <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <CheckCircle className="w-4 h-4 text-green-500" />
+                  Progreso
+                </h3>
+                <div className="flex items-end gap-2 mb-3">
+                  <span className="text-4xl font-black text-gray-900">{reportData.facilesCount || 0}</span>
+                  <span className="text-gray-400 font-semibold mb-1">/ {reportData.totalTarjetas || reportData.progreso?.totales || 5} Dominadas</span>
                 </div>
-
-                <div className="bg-white p-5 rounded-2xl border border-gray-100 shadow-sm relative overflow-hidden">
-                  <div className="absolute top-0 right-0 p-4 opacity-5">
-                     <Target className="w-24 h-24" />
+                
+                {/* Desglose de resultados */}
+                <div className="mt-6 grid grid-cols-3 gap-4 border-t border-gray-100 pt-5">
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Fácil</p>
+                    <p className="text-2xl font-black text-emerald-500">{reportData.desglose?.facil || 0}</p>
                   </div>
-                  <h3 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 flex items-center gap-1.5 relative z-10">
-                    <Target className="w-4 h-4 text-[#1E3A8A]" />
-                    Tasa de Acierto
-                  </h3>
-                  <div className="flex items-end gap-2 relative z-10">
-                    <span className="text-4xl font-black text-[#1E3A8A]">{reportData.rendimiento.tasaAcierto}%</span>
+                  <div className="text-center border-l border-r border-gray-100">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Bien</p>
+                    <p className="text-2xl font-black text-blue-500">{reportData.desglose?.bien || 0}</p>
                   </div>
-                  <p className="text-sm text-gray-500 mt-2 font-medium relative z-10">Constancia: {reportData.rendimiento.constancia}%</p>
+                  <div className="text-center">
+                    <p className="text-xs font-bold text-gray-400 uppercase mb-1">Difícil</p>
+                    <p className="text-2xl font-black text-amber-500">{reportData.desglose?.dificil || 0}</p>
+                  </div>
                 </div>
               </div>
 

@@ -35,20 +35,34 @@ const Auth: React.FC = () => {
         body: JSON.stringify(payload)
       });
 
-      const data = await res.json();
+      if (res.ok) {
+        let data: any = {};
+        try {
+          const text = await res.text();
+          data = text ? JSON.parse(text) : {};
+        } catch (e) {}
 
-      if (!res.ok) {
-        setError(data.error || 'Ocurrió un error en la autenticación.');
-        return;
-      }
-
-      if (data.token && data.user) {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('userId', data.user.id);
-        localStorage.setItem('userRole', data.user.role);
-        navigate('/');
+        if (isLogin) {
+          if (data.token && data.user) {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.user.id);
+            localStorage.setItem('userRole', data.user.role);
+            navigate('/');
+          } else {
+            setError('Error: Respuesta inesperada del servidor.');
+          }
+        } else {
+          setIsLogin(true);
+          setPassword('');
+          setError('');
+        }
       } else {
-        setError('Error: Respuesta inesperada del servidor.');
+        let errData: any = {};
+        try {
+          const text = await res.text();
+          errData = text ? JSON.parse(text) : {};
+        } catch (e) {}
+        setError(errData.error || 'Ocurrió un error en la autenticación.');
       }
 
     } catch (err) {

@@ -18,6 +18,7 @@ interface Deck {
   pendingCards?: number;
   studiedCards?: number;
   precision?: number;
+  facilesCount?: number;
 }
 
 interface DashboardData {
@@ -386,7 +387,7 @@ const StudentDashboard: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {displayedDecks.length > 0 ? (
               displayedDecks.map((deck) => {
-                console.log("MAZO RECIBIDO EN FRONTEND:", deck);
+                console.log("Datos del mazo en el estudiante:", deck);
                 const totalCards = Number(deck.totalCards) || 0;
                 const studiedCards = Number(deck.studiedCards) || 0;
                 const pending = deck.pendingCards ?? totalCards;
@@ -424,25 +425,8 @@ const StudentDashboard: React.FC = () => {
                       </p>
                     </div>
 
-                    {/* Progress bar */}
-                    <div className="mb-4">
-                      <div className="flex justify-between items-center mb-1.5">
-                        <span className="text-xs text-slate-400 font-medium">Progreso</span>
-                        <span className="text-xs font-bold text-slate-600">{progress}%</span>
-                      </div>
-                      <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-700 ${precisionColor(progress)}`}
-                          style={{ width: `${progress}%` }}
-                        />
-                      </div>
-                    </div>
-
                     {/* Bottom row */}
-                    <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold ${precision >= 80 ? 'text-emerald-600' : precision >= 50 ? 'text-amber-500' : 'text-red-500'}`}>
-                        {precision > 0 ? `${precision}% precisión` : 'Sin datos aún'}
-                      </span>
+                    <div className="flex items-center justify-end">
                       <button
                         onClick={(e) => { e.stopPropagation(); navigate(`/study/${deck.id}`); }}
                         className={`rounded-xl px-4 py-2 text-sm text-white font-semibold shadow-sm transition-transform active:scale-95 ${isComplete ? 'bg-emerald-500 hover:bg-emerald-600' : 'bg-blue-700 hover:bg-blue-800'}`}

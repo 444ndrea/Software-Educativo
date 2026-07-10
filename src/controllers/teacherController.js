@@ -89,11 +89,20 @@ const getReport = async (req, res) => {
     // 1. Conteo directo de tarjetas completadas (registros existentes)
     const consolidadas = progresses.length;
     
-    // 2. Tasa de acierto: Promedio del easiness_factor
+    // 2. Tasa de acierto: Promedio del easiness_factor y Desglose
     let sumEf = 0;
+    let facilesCount = 0;
+    let bienCount = 0;
+    let dificilCount = 0;
+
     progresses.forEach(p => {
-      sumEf += (p.easiness_factor != null ? parseFloat(p.easiness_factor) : 2.5);
+      const ef = p.easiness_factor != null ? parseFloat(p.easiness_factor) : 2.5;
+      sumEf += ef;
+      if (ef >= 2.5) facilesCount++;
+      else if (ef >= 2.0) bienCount++;
+      else dificilCount++;
     });
+    
     const tasaAcierto = progresses.length > 0 
       ? Math.min(100, Math.max(0, Math.round((sumEf / progresses.length) / 2.5 * 100))) 
       : 0;
@@ -111,6 +120,13 @@ const getReport = async (req, res) => {
     const constancia = student ? Math.min(100, (student.current_streak || 0) * 10) : 0;
 
     res.json({
+      totalTarjetas: totalCards,
+      facilesCount,
+      desglose: {
+        facil: facilesCount,
+        bien: bienCount,
+        dificil: dificilCount
+      },
       progreso: {
         totales: totalCards,
         consolidadas
