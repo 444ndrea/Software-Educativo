@@ -45,7 +45,7 @@ const TeacherDashboard: React.FC = () => {
     try {
       const token = localStorage.getItem('token');
 
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teacher/dashboard`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/teacher/dashboard`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
@@ -71,7 +71,7 @@ const TeacherDashboard: React.FC = () => {
   const handleDownload = async (student: Student) => {
     try {
       const token = localStorage.getItem('token');
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teacher/export/student/${student.id}`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/teacher/export/student/${student.id}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (res.ok) {
@@ -136,7 +136,7 @@ const TeacherDashboard: React.FC = () => {
 
     try {
       const token = localStorage.getItem('token') || '';
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/mazos`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/mazos`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

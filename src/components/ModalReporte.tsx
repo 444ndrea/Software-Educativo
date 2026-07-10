@@ -29,7 +29,7 @@ const ModalReporte: React.FC<ModalReporteProps> = ({ isOpen, onClose, student, s
       setLoadingMazos(true);
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/mazos/estudiante/${student.id}`, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/mazos/estudiante/${student.id}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (res.ok) {
@@ -57,7 +57,7 @@ const ModalReporte: React.FC<ModalReporteProps> = ({ isOpen, onClose, student, s
       setError('');
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/teacher/report/student/${student.id}/deck/${selectedMazoId}`, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/teacher/report/student/${student.id}/deck/${selectedMazoId}`, {
           headers: { 'Authorization': `Bearer ${token}` }
         });
         if (!res.ok) throw new Error('Error al obtener el reporte');

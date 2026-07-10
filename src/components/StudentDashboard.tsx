@@ -100,7 +100,7 @@ const StudentDashboard: React.FC = () => {
     const fetchData = async () => {
       try {
         const token = localStorage.getItem('token') || '';
-        const res = await fetch(`${process.env.REACT_APP_API_URL}/api/student/dashboard`, {
+        const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/student/dashboard`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
@@ -142,7 +142,7 @@ const StudentDashboard: React.FC = () => {
       const token = localStorage.getItem('token') || '';
       const userId = localStorage.getItem('userId');
       if (!userId) { navigate('/login'); return; }
-      const res = await fetch(`${process.env.REACT_APP_API_URL}/api/ai/generate-cards`, {
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/ai/generate-cards`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ topic, userId }),
