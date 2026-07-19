@@ -25,6 +25,32 @@ const StudySession: React.FC = () => {
   const [elapsed, setElapsed] = useState(0);
   const [freezeTime, setFreezeTime] = useState(false);
 
+  // Preview states
+  const [isViewingPreview, setIsViewingPreview] = useState(true);
+  const [previewTimeLeft, setPreviewTimeLeft] = useState(30);
+  const configTimeRef = React.useRef(30);
+
+  useEffect(() => {
+    const fetchConfig = async () => {
+      try {
+        const token = localStorage.getItem('token') || '';
+        const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/config`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && typeof data.tiempoPrevisualizacion === 'number') {
+            configTimeRef.current = data.tiempoPrevisualizacion;
+            setPreviewTimeLeft(data.tiempoPrevisualizacion);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching config:', error);
+      }
+    };
+    fetchConfig();
+  }, []);
+
   const fetchCards = async (reviewAll = false) => {
     try {
       setLoading(true);
@@ -47,6 +73,8 @@ const StudySession: React.FC = () => {
         setCards(data);
         setCurrentIndex(0);
         setSessionStats({ easy: 0, good: 0, hard: 0, total: 0 });
+        setIsViewingPreview(true);
+        setPreviewTimeLeft(configTimeRef.current);
         setStartTime(Date.now());
         setElapsed(0);
         setFreezeTime(false);
@@ -63,14 +91,31 @@ const StudySession: React.FC = () => {
   }, [sectionId]);
 
   useEffect(() => {
-    if (loading || cards.length === 0 || currentIndex >= cards.length || freezeTime) return;
+    if (loading || cards.length === 0 || currentIndex >= cards.length || freezeTime || isViewingPreview) return;
     
     const intervalId = setInterval(() => {
       setElapsed(Math.floor((Date.now() - startTime) / 1000));
     }, 1000);
 
     return () => clearInterval(intervalId);
-  }, [loading, cards.length, currentIndex, startTime, freezeTime]);
+  }, [loading, cards.length, currentIndex, startTime, freezeTime, isViewingPreview]);
+
+  useEffect(() => {
+    let intervalId: any;
+    if (isViewingPreview && !loading && cards.length > 0 && currentIndex === 0) {
+      intervalId = setInterval(() => {
+        setPreviewTimeLeft((prev) => {
+          if (prev <= 1) {
+            setIsViewingPreview(false);
+            setStartTime(Date.now());
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    return () => clearInterval(intervalId);
+  }, [isViewingPreview, loading, cards.length, currentIndex]);
 
   // Completado
   useEffect(() => {
@@ -284,6 +329,64 @@ const StudySession: React.FC = () => {
             </button>
           </div>
         </motion.div>
+      </div>
+    );
+  }
+
+  if (isViewingPreview && cards.length > 0 && currentIndex === 0) {
+    return (
+      <div className="flex flex-col min-h-screen bg-[#F5F5F7] font-sans p-6">
+        <div className="max-w-4xl mx-auto w-full pb-24">
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center mb-10"
+          >
+            <h2 className="text-3xl md:text-4xl font-extrabold text-[#1E3A8A] mb-4 drop-shadow-sm">
+              ⏱️ ¡Memoriza tus tarjetas!
+            </h2>
+            <p className="text-xl text-gray-600 font-medium">
+              Tienes <span className="font-bold text-red-500 text-2xl">{previewTimeLeft}</span> segundos...
+            </p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {cards.map((card, idx) => (
+              <motion.div
+                key={card.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: idx * 0.05 }}
+                className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow flex flex-col"
+              >
+                <div className="mb-4">
+                  <span className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2 block">Pregunta</span>
+                  <p className="text-lg font-bold text-gray-800">{card.side_a}</p>
+                </div>
+                <div className="mt-auto pt-4 border-t border-gray-50">
+                  <span className="text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 block">Respuesta</span>
+                  <p className="text-lg font-bold text-[#1E3A8A]">{card.side_b}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="fixed bottom-0 left-0 w-full p-6 bg-gradient-to-t from-[#F5F5F7] via-[#F5F5F7] to-transparent flex justify-center pb-8 z-10 pointer-events-none"
+          >
+            <button
+              onClick={() => {
+                setIsViewingPreview(false);
+                setStartTime(Date.now());
+              }}
+              className="pointer-events-auto bg-[#1E3A8A] hover:bg-[#172554] text-white font-bold py-4 px-8 rounded-full shadow-xl transition-transform transform hover:-translate-y-1 active:scale-95 flex items-center gap-2 text-lg"
+            >
+              🚀 ¡Ya me las sé, empezar repaso!
+            </button>
+          </motion.div>
+        </div>
       </div>
     );
   }

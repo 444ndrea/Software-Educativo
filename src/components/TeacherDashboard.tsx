@@ -41,6 +41,12 @@ const TeacherDashboard: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
+  // Config Modal states
+  const [isConfigOpen, setIsConfigOpen] = useState(false);
+  const [configName, setConfigName] = useState('');
+  const [configInstitution, setConfigInstitution] = useState('');
+  const [configPreviewTime, setConfigPreviewTime] = useState(60);
+
   const fetchDashboardData = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -190,7 +196,7 @@ const TeacherDashboard: React.FC = () => {
             <span className="text-sm">Soporte y Ayuda</span>
           </button>
           <button
-            onClick={() => alert('Abriendo panel de configuración...')}
+            onClick={() => setIsConfigOpen(true)}
             className="flex items-center gap-2 text-gray-600 hover:text-gray-900 font-semibold transition-colors bg-white px-5 py-2.5 rounded-xl shadow-sm border border-gray-200"
           >
             <Settings className="w-4 h-4" />
@@ -468,6 +474,106 @@ const TeacherDashboard: React.FC = () => {
         student={selectedStudent}
         sections={dashboardData.sections}
       />
+
+      {/* Config Modal */}
+      {isConfigOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 md:p-8">
+              <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-3">
+                <Settings className="w-6 h-6 text-[#1E3A8A]" />
+                Configuración del Panel Docente
+              </h2>
+              
+              <div className="space-y-6">
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Sección 1: Perfil</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Nombre del Profesor</label>
+                    <input
+                      type="text"
+                      value={configName}
+                      onChange={(e) => setConfigName(e.target.value)}
+                      placeholder="Ej. Dr. Alan Turing"
+                      className="w-full px-4 py-3 bg-gray-50 text-gray-900 rounded-xl border border-gray-200 focus:bg-white focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Institución / Asignatura</label>
+                    <input
+                      type="text"
+                      value={configInstitution}
+                      onChange={(e) => setConfigInstitution(e.target.value)}
+                      placeholder="Ej. Universidad de Ciencias / Algoritmos"
+                      className="w-full px-4 py-3 bg-gray-50 text-gray-900 rounded-xl border border-gray-200 focus:bg-white focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+
+                <div className="h-px bg-gray-100 w-full" />
+
+                <div className="space-y-4">
+                  <h3 className="text-sm font-bold text-gray-400 uppercase tracking-wider">Sección 2: Parámetros Pedagógicos</h3>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">Tiempo de Previsualización Inicial (segundos)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      max="300"
+                      value={configPreviewTime}
+                      onChange={(e) => setConfigPreviewTime(parseInt(e.target.value) || 0)}
+                      className="w-full px-4 py-3 bg-gray-50 text-gray-900 rounded-xl border border-gray-200 focus:bg-white focus:ring-2 focus:ring-[#1E3A8A] focus:border-[#1E3A8A] outline-none transition-all shadow-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  onClick={() => setIsConfigOpen(false)}
+                  className="px-6 py-3 font-semibold text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-xl transition-colors active:scale-95"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = localStorage.getItem('token') || '';
+                      const res = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:3001'}/api/config`, {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                          tiempoPrevisualizacion: configPreviewTime,
+                          nombreProfesor: configName,
+                          asignatura: configInstitution
+                        })
+                      });
+                      if (res.ok) {
+                        alert("Configuración guardada con éxito");
+                        setIsConfigOpen(false);
+                      } else {
+                        alert("Error al guardar la configuración");
+                      }
+                    } catch (error) {
+                      console.error("Error al guardar config:", error);
+                      alert("Error de red al guardar la configuración");
+                    }
+                  }}
+                  className="px-6 py-3 font-semibold text-white bg-[#1E3A8A] hover:bg-[#172554] rounded-xl shadow-sm hover:shadow transition-all active:scale-95 flex items-center gap-2"
+                >
+                  Guardar Cambios
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

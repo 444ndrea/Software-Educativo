@@ -31,8 +31,11 @@ const generateCards = async (req, res) => {
     });
 
     // Preparar el array de tarjetas para añadir el userId, sectionId y marcar como generadas por IA
+    // Preparar el array de tarjetas para añadir el userId, sectionId y marcar como generadas por IA
+    // Mapeamos pregunta -> side_a y respuesta -> side_b para cumplir con las restricciones NOT NULL de SQLite
     const flashcardsData = generatedFlashcards.map(card => ({
-      ...card,
+      side_a: card.pregunta,
+      side_b: card.respuesta,
       userId: userId,
       sectionId: section.id,
       is_ai_generated: true

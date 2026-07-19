@@ -327,18 +327,11 @@ const StudentDashboard: React.FC = () => {
                   : 'Estudia hoy para iniciar tu racha de días continuos.'}
               </p>
 
-              {/* Progress bar */}
+              {/* Progress text */}
               <div className="mt-4">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-xs text-blue-200 font-medium">{completedToday} completadas hoy</span>
-                  <span className="text-xs font-bold text-white">{dailyProgress}%</span>
-                </div>
-                <div className="w-full bg-blue-900/40 h-3 rounded-full overflow-hidden">
-                  <div
-                    className="bg-white h-full rounded-full transition-all duration-700 ease-out"
-                    style={{ width: `${dailyProgress}%` }}
-                  />
-                </div>
+                <span className="text-sm text-blue-200 font-medium bg-blue-900/30 px-3 py-1 rounded-lg backdrop-blur-sm border border-blue-600/30 inline-block">
+                  {completedToday} completadas hoy
+                </span>
               </div>
             </div>
 

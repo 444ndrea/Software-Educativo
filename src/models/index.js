@@ -3,6 +3,7 @@ const User = require('./User');
 const Section = require('./Section');
 const Flashcard = require('./Flashcard');
 const Progress = require('./Progress');
+const Config = require('./Config');
 
 // Definición de las Asociaciones
 
@@ -35,5 +36,6 @@ module.exports = {
   User,
   Section,
   Flashcard,
-  Progress
+  Progress,
+  Config
 };
