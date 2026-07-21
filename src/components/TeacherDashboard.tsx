@@ -18,6 +18,7 @@ interface Section {
   autor?: string;
   flashcardsCount: number;
   createdAt: string;
+  estado?: string;
 }
 
 const TeacherDashboard: React.FC = () => {
@@ -71,6 +72,32 @@ const TeacherDashboard: React.FC = () => {
       console.error('Error fetching dashboard data:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const toggleDeckStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'deshabilitado' ? 'activo' : 'deshabilitado';
+    try {
+      const token = localStorage.getItem('token') || '';
+      const res = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/teacher/sections/${id}/status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ estado: newStatus })
+      });
+      if (res.ok) {
+        setDashboardData(prev => ({
+          ...prev,
+          sections: prev.sections.map(s => s.id === id ? { ...s, estado: newStatus } : s)
+        }));
+      } else {
+        alert('Error al actualizar el estado');
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error de red al actualizar estado');
     }
   };
 
@@ -369,6 +396,8 @@ const TeacherDashboard: React.FC = () => {
                       <th className="pb-4 font-semibold">Tarjetas</th>
                       <th className="pb-4 font-semibold">Fecha de Creación</th>
                       <th className="pb-4 font-semibold">Autor</th>
+                      <th className="pb-4 font-semibold">Estado</th>
+                      <th className="pb-4 font-semibold text-right">Acciones</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100 text-sm">
@@ -381,9 +410,22 @@ const TeacherDashboard: React.FC = () => {
                             {new Date(section.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                           </td>
                           <td className="py-4">
-                            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold">
+                            <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
                               {section.autor || 'Profesor'}
                             </span>
+                          </td>
+                          <td className="py-4">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${section.estado === 'deshabilitado' ? 'bg-red-100 text-red-600' : 'bg-green-100 text-green-600'}`}>
+                              {section.estado === 'deshabilitado' ? 'Inactivo' : 'Aprobado'}
+                            </span>
+                          </td>
+                          <td className="py-4 text-right">
+                            <button
+                              onClick={() => toggleDeckStatus(section.id, section.estado || 'activo')}
+                              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors whitespace-nowrap ${section.estado === 'deshabilitado' ? 'bg-green-50 text-green-700 hover:bg-green-100' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
+                            >
+                              {section.estado === 'deshabilitado' ? 'Aprobar Tema' : 'Deshabilitar'}
+                            </button>
                           </td>
                         </tr>
                       ))

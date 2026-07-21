@@ -4,6 +4,9 @@ const { sequelize, User, Section, Flashcard, Progress } = require('./models');
 const { Op } = require('sequelize');
 
 const PORT = process.env.PORT || 3001;
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Servidor escuchando en el puerto ${PORT}`);
+});
 
 // Nuevos endpoints FASE 1
 app.get('/api/profesor/stats', async (req, res) => {
@@ -67,10 +70,20 @@ app.get('/api/mazos/estudiante/:usuarioId', async (req, res) => {
       },
       group: ['Section.id', 'teacher.id'],
       where: {
-        [Op.or]: [
-          { teacherId: usuarioId },
-          { teacherId: null },
-          { '$teacher.role$': 'teacher' }
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { estado: 'activo' },
+              { estado: null }
+            ]
+          },
+          {
+            [Op.or]: [
+              { teacherId: usuarioId },
+              { teacherId: null },
+              { '$teacher.role$': 'teacher' }
+            ]
+          }
         ]
       }
     });
@@ -256,7 +269,7 @@ async function startServer() {
   try {
     // Sincronizar Modelos a SQLite Local
     // `alter: true` sincroniza la estructura de la tabla (agrega columnas faltantes)
-    await sequelize.sync({ force: true });
+    await sequelize.sync({ alter: true });
     console.log('✅ Base de Datos SQLite sincronizada');
 
     app.listen(PORT, () => {

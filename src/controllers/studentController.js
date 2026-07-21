@@ -19,10 +19,20 @@ const getDashboardStats = async (req, res) => {
         { model: User, as: 'teacher', attributes: ['role'] }
       ],
       where: {
-        [Op.or]: [
-          { teacherId: userId },
-          { teacherId: null },
-          { '$teacher.role$': 'teacher' }
+        [Op.and]: [
+          {
+            [Op.or]: [
+              { estado: 'activo' },
+              { estado: null }
+            ]
+          },
+          {
+            [Op.or]: [
+              { teacherId: userId },
+              { teacherId: null },
+              { '$teacher.role$': 'teacher' }
+            ]
+          }
         ]
       }
     });

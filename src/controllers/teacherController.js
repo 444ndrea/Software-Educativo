@@ -21,7 +21,8 @@ const getDashboard = async (req, res) => {
       name: section.name,
       createdAt: section.createdAt,
       flashcardsCount: section.flashcards ? section.flashcards.length : 0,
-      autor: section.teacher ? section.teacher.name : 'Profesor'
+      autor: section.teacher ? section.teacher.name : 'Profesor',
+      estado: section.estado || 'activo'
     }));
 
     // Students Performance
@@ -213,8 +214,26 @@ const exportCSV = async (req, res) => {
   }
 };
 
+const toggleSectionStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estado } = req.body;
+    const section = await Section.findByPk(id);
+    if (!section) return res.status(404).json({ error: 'Mazo no encontrado' });
+    
+    section.estado = estado;
+    await section.save();
+    
+    res.json({ message: 'Estado actualizado', section });
+  } catch (error) {
+    console.error('Error toggling status:', error);
+    res.status(500).json({ error: 'Error al actualizar el estado del mazo' });
+  }
+};
+
 module.exports = {
   getDashboard,
   getReport,
-  exportCSV
+  exportCSV,
+  toggleSectionStatus
 };

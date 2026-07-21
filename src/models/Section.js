@@ -10,6 +10,10 @@ const Section = sequelize.define('Section', {
   name: {
     type: DataTypes.STRING,
     allowNull: false,
+  },
+  estado: {
+    type: DataTypes.STRING,
+    defaultValue: 'activo',
   }
   // teacherId será añadido mediante las asociaciones
 }, {

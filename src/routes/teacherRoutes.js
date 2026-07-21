@@ -15,4 +15,7 @@ router.get('/report/student/:studentId/deck/:deckId', requireAuth, requireTeache
 // Export CSV
 router.get('/export/student/:studentId', requireAuth, requireTeacher, teacherController.exportCSV);
 
+// Toggle section status (Aprobar / Deshabilitar)
+router.put('/sections/:id/status', requireAuth, requireTeacher, teacherController.toggleSectionStatus);
+
 module.exports = router;
