@@ -1,5 +1,6 @@
 const aiService = require('../services/aiService');
 const { Flashcard, Section } = require('../models');
+const { generateFlashcards } = require('../services/aiService');
 
 const generateCards = async (req, res) => {
   try {

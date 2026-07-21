@@ -1,4 +1,4 @@
-export const generateFlashcards = async (tema) => {
+const generateFlashcards = async (tema) => {
   try {
     console.log("[aiService] Generando flashcards con Gemini para:", tema);
 
@@ -14,7 +14,6 @@ export const generateFlashcards = async (tema) => {
       const modelsData = await modelsResponse.json();
       const availableModels = modelsData.models || [];
       
-      // Buscar un modelo que admita generateContent (priorizando flash o pro)
       const validModel = availableModels.find(m => 
         m.supportedGenerationMethods?.includes("generateContent") && 
         (m.name.includes("flash") || m.name.includes("pro"))
@@ -36,6 +35,7 @@ export const generateFlashcards = async (tema) => {
     - Respuesta: Directa y concreta, ideal para memorización rápida (máximo 2 a 3 oraciones cortas o menos de 30 palabras).
     Cada objeto debe tener exactamente las llaves "pregunta" y "respuesta".
     Devuelve ÚNICAMENTE el arreglo JSON puro, sin bloques de código markdown, ni texto adicional. Ejemplo: [{"pregunta":"...","respuesta":"..."}]`;
+
     const response = await fetch(generateUrl, {
       method: "POST",
       headers: {
@@ -65,7 +65,6 @@ export const generateFlashcards = async (tema) => {
   } catch (error) {
     console.error("[aiService] ERROR EN PETICIÓN FETCH:", error);
 
-    // Respaldo local de contingencia en caso de error
     return [
       { pregunta: "¿Cuál es la definición fundamental de " + tema + "?", respuesta: "Es el concepto principal que describe la esencia de este fenómeno o tema de estudio." },
       { pregunta: "¿Cuáles son las características clave asociadas a " + tema + "?", respuesta: "Incluye una serie de atributos y propiedades que lo distinguen de otros conceptos similares." },
@@ -75,3 +74,5 @@ export const generateFlashcards = async (tema) => {
     ];
   }
 };
+
+module.exports = { generateFlashcards };
